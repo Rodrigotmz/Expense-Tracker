@@ -1,5 +1,8 @@
-﻿using System.CommandLine;
+﻿using expense_tracker.CLI;
+using System.CommandLine;
+using Spectre.Console;
 
+var manager = new ExpenseManager();
 //Opciones de los comandos
 var addDescriptionOption =new Option<string>(name: "--description", description: "Add a description")
 {
@@ -57,35 +60,32 @@ var deleteCommand = new Command("delete", "Delete an expense")
 };
 
 
-addCommand.SetHandler((description, amount) =>
+addCommand.SetHandler(async (description, amount) =>
 {
-    Console.WriteLine($"Adding expense with description: {description} and amount: {amount}");
-    Console.WriteLine($"Expense added successfully (ID: 1)");
+    int id = await manager.AddExpense(description, amount);
+    AnsiConsole.MarkupLine($"[green]Expense added successfully (ID: {id})[/]");
 }, addDescriptionOption, addAmountOption);
 
-listCommand.SetHandler(() =>
+listCommand.SetHandler(async () =>
 {
-    Console.WriteLine("Listing all expenses...");
-    Console.WriteLine("1. Description: Groceries, Amount: 50.00");
-    Console.WriteLine("2. Description: Rent, Amount: 1200.00");
+    await manager.List();
 });
 
-summaryCommand.SetHandler((month) =>
+summaryCommand.SetHandler(async (month) =>
 {
+    
     if (month > 0) {
-        Console.WriteLine($"Showing summary of expenses for month: {month}");
+        await manager.Summary(month);
     }
     else
     {
-        Console.WriteLine("Showing summary of expenses...");
-        Console.WriteLine("Total Expenses: 1250.00");
+        await manager.Summary();
     }
 
 }, summaryOption);
-deleteCommand.SetHandler((id) =>
+deleteCommand.SetHandler(async (id) =>
 {
-    Console.WriteLine($"Deleting expense with ID: {id}");
-    Console.WriteLine($"Expense with ID {id} deleted successfully.");
+    await manager.DeleteExpense(id);
 }, deleteOption);
 
 
@@ -97,5 +97,6 @@ var rootCommand = new RootCommand("Expense Tracker CLI")
     summaryCommand,
     deleteCommand
 };
-
+//string[] arg = { "summary", "--month", "3"};
+//string[] arg = { "list"};
 await rootCommand.InvokeAsync(args);
